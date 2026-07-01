@@ -2,15 +2,27 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Globe, Sun, Moon, HelpCircle, ChevronDown } from "lucide-react";
+import { Globe, Sun, Moon, HelpCircle, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+// Dynamically import the Map component with SSR disabled
+const MapComponent = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-screen bg-background flex items-center justify-center animate-pulse z-0">
+      <div className="text-sm text-muted-foreground">Loading Map Matrix...</div>
+    </div>
+  ),
+});
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [lang, setLang] = useState<"EN" | "ID">("EN");
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize Theme and Mounting
@@ -78,7 +90,15 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen selection:bg-primary/20">
+    <div className="relative min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary/20 flex flex-col">
+      
+      {/* 1. Map as full-screen background */}
+      <div className="fixed inset-0 w-screen h-screen z-0">
+        <MapComponent theme={theme} className="w-full h-full" />
+        {/* Subtle grid overlay to enhance cyberpunk/command center feel */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,18,0.07)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-40 dark:opacity-80" />
+      </div>
+
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/60 backdrop-blur-md transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -171,6 +191,28 @@ export default function Home() {
 
         </div>
       </nav>
+
+      {/* Floating Sidebar Toggle Button that moves in sync with the sidebar */}
+      <motion.button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        animate={{ right: isSidebarOpen ? "392px" : "16px" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        className="fixed top-20 z-40 w-10 h-10 rounded-xl border border-border/40 bg-background/85 backdrop-blur-md flex items-center justify-center cursor-pointer shadow-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors select-none"
+        aria-label={isSidebarOpen ? "Collapse control panel" : "Expand control panel"}
+      >
+        {isSidebarOpen ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
+      </motion.button>
+
+      {/* Stateful slide-out sidebar */}
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: isSidebarOpen ? 0 : "100%" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        className="fixed right-0 top-16 bottom-0 z-40 w-80 sm:w-96 border-l border-border/40 bg-background/70 backdrop-blur-xl shadow-2xl flex flex-col"
+      >
+        {/* Clean canvas for new dynamic components */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-5" />
+      </motion.div>
     </div>
   );
 }
