@@ -1,5 +1,7 @@
 import { Inter, League_Spartan } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -14,6 +16,8 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans scroll-smooth", inter.variable, leagueSpartan.variable)} suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
